@@ -24,21 +24,21 @@ def create_ontology(url):
         info_box = doc.xpath("//table[contains(@class, 'infobox')]")
         create_relations(info_box, movie)
 
-    for person_url in urls:
-        res = requests.get(person_url)
-        doc = lxml.html.fromstring(res.content)
-        info_box = doc.xpath("//table[contains(@class, 'infobox')]")
-        name = person_url.split("/")[-1]
-        add_person(info_box, name)
+    # for person_url in urls: // TODO - uncomment until 32
+    #     res = requests.get(person_url)
+    #     doc = lxml.html.fromstring(res.content)
+    #     info_box = doc.xpath("//table[contains(@class, 'infobox')]")
+    #     name = person_url.split("/")[-1]
+    #     add_person(info_box, name)
     g.serialize("ontology.nt", format="nt")
 
 
 def create_relations(info_box, movie):
-    add_relation_by_type(info_box, movie, 'Directed by')
-    add_relation_by_type(info_box, movie, 'Produced by')
-    add_relation_by_type(info_box, movie, 'Written by')
-    add_relation_by_type(info_box, movie, 'Starring')
-
+    # add_relation_by_type(info_box, movie, 'Directed by') // TODO - uncomment
+    # add_relation_by_type(info_box, movie, 'Produced by') // TODO - uncomment
+    # add_relation_by_type(info_box, movie, 'Written by') // TODO - uncomment
+    # add_relation_by_type(info_box, movie, 'Starring') // TODO - uncomment
+    add_release_date(info_box, movie)
 
 
 def add_relation_by_type(info_box, movie, relation):
@@ -56,8 +56,8 @@ def add_relation_by_type(info_box, movie, relation):
         # Undefeated movie
         if entity == ' ':
             continue
-        entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + entity.replace(" ", "_")) # TODO - use strip()?
-        # g.add((movie, relation_for_ontology, entity_graph))
+        # entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + entity.replace(" ", "_")) // TODO - uncomment
+        # g.add((movie, relation_for_ontology, entity_graph)) // TODO - uncomment
 
 
 def get_directors_info(info_box):
@@ -107,6 +107,16 @@ def get_actors_info(info_box):
         add_urls(entities_urls)
         return entities
 
+def add_release_date(info_box, movie):
+    if info_box == []:
+        return
+    date = info_box[0].xpath("//table//th/div[contains(text(),'Release date')]/../../td//span[contains(@class, 'bday dtstart published updated')]/text()")
+    if len(date) == 0:
+        return
+    date_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + date[0])
+    relation = rdflib.URIRef(EXAMPLE_PREFIX + "/" + 'Released_on')
+    g.add((movie, relation, date_graph))
+
 
 def add_urls(entities_urls):
     for url in entities_urls:
@@ -118,8 +128,8 @@ def add_urls(entities_urls):
 def add_person(info_box, name):
     if info_box == []:
         return
-    # add_person_by_type(info_box, name, 'Born')
-    add_person_by_type(info_box, name, 'Occupation')
+    # add_person_by_type(info_box, name, 'Born') // TODO - uncomment
+    # add_person_by_type(info_box, name, 'Occupation') // TODO - uncomment
 
 
 def add_person_by_type(info_box, name, relation):
@@ -174,7 +184,6 @@ def add_occupation(info_box, name_graph):
         if len(occupation_str) < 2:
             continue
         occupation_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + occupation_str)
-        # print(name_graph, occupation_graph)
         g.add((name_graph, relation, occupation_graph))
 
 
