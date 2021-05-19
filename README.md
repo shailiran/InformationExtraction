@@ -12,5 +12,5 @@ This is an information extraction system to answer natural language questions ab
 2. 
 
 ## :woman: Team Members
-Rotem Brooks - rotembr10@gmail.com
+Rotem Brooks - rotembr10@gmail.com <br/>
 Shai Liran - shailiran@gmail.com
