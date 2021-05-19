@@ -118,23 +118,16 @@ def add_urls(entities_urls):
 def add_person(info_box, name):
     if info_box == []:
         return
-    add_person_by_type(info_box, name, 'Born')
-    # add_person_by_type(info_box, name, 'Occupation')
-    # add_person_by_type(info_box, 'Years active')
-    # add_person_by_type(info_box, 'Education')
-    # add_person_by_type(info_box, 'Children')
-
+    # add_person_by_type(info_box, name, 'Born')
+    add_person_by_type(info_box, name, 'Occupation')
 
 
 def add_person_by_type(info_box, name, relation):
     name_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + name)
     if relation == 'Born':
         add_bday(info_box, name_graph)
-    # elif relation == 'Occupation':
-    #     add_occupation(info_box)
-
-
-
+    elif relation == 'Occupation':
+        add_occupation(info_box, name_graph)
 
 
 def add_bday(info_box, name_graph):
@@ -167,10 +160,25 @@ def add_bday(info_box, name_graph):
 #             "//table//th[contains(text(), 'Born')]/../td/div/div/ul/li/span/span[contains(@class,'bday')]/text()|"
 #                                      "//table//th[contains(text(), 'Born')]/../td/span/span/span[contains(@class,'bday')]/text()")
 
-# def add_occupation(info_box):
-#
-#
-#
+def add_occupation(info_box, name_graph):
+    occupations = info_box[0].xpath("//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/text() |"
+                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/a/text() |"
+                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/text()")
+
+    relation = rdflib.URIRef(EXAMPLE_PREFIX + "/" + 'Occupation')
+    if len(occupations) == 1:
+        occupations = occupations[0].split(",")
+
+    for occupation in occupations:
+        occupation_str = occupation.strip().lower().replace(" ", "_")
+        if len(occupation_str) < 2:
+            continue
+        occupation_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + occupation_str)
+        # print(name_graph, occupation_graph)
+        g.add((name_graph, relation, occupation_graph))
+
+
+
 
 
 
