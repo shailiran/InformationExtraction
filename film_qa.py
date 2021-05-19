@@ -39,8 +39,8 @@ def create_relations(info_box, movie):
     # add_relation_by_type(info_box, movie, 'Written by') // TODO - uncomment
     # add_relation_by_type(info_box, movie, 'Starring') // TODO - uncomment
     # add_release_date(info_box, movie) // TODO - uncomment
-    add_based_on(info_box, movie)
-
+    # add_based_on(info_box, movie) // TODO - uncomment
+    add_running_time(info_box, movie)
 
 def add_relation_by_type(info_box, movie, relation):
     fixed_relation = relation.replace(" ", "_")
@@ -129,6 +129,19 @@ def add_based_on(info_box, movie):
     book_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + book[0].replace(" ", "_"))
     relation = rdflib.URIRef(EXAMPLE_PREFIX + "/" + 'Based_on')
     g.add((movie, relation, book_graph))
+
+def add_running_time(info_box, movie):
+    if info_box == []:
+        return
+    times = info_box[0].xpath("//table//th/div[contains(text(),'Running time')]/../../td/text() |"
+                             "//table//th/div[contains(text(),'Running time')]/../../td//li/text()")
+    if len(times) == 0:
+        return
+    relation = rdflib.URIRef(EXAMPLE_PREFIX + "/" + 'Based_on')
+    for time in times:
+        time_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + time.strip().replace(" ", "_"))
+        g.add((movie, relation, time_graph))
+
 
 def add_urls(entities_urls):
     for url in entities_urls:
