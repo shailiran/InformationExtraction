@@ -28,7 +28,8 @@ def create_ontology(url):
         res = requests.get(person_url)
         doc = lxml.html.fromstring(res.content)
         info_box = doc.xpath("//table[contains(@class, 'infobox')]")
-        add_person(info_box)
+        name = person_url.split("/")[-1]
+        add_person(info_box, name)
     g.serialize("ontology.nt", format="nt")
 
 
@@ -42,7 +43,7 @@ def create_relations(info_box, movie):
 
 def add_relation_by_type(info_box, movie, relation):
     fixed_relation = relation.replace(" ", "_")
-    relation1 = rdflib.URIRef(EXAMPLE_PREFIX + "/" + fixed_relation)
+    relation_for_ontology = rdflib.URIRef(EXAMPLE_PREFIX + "/" + fixed_relation)
     if relation == 'Directed by':
         entities = get_directors_info(info_box)
     elif relation == 'Produced by':
@@ -56,7 +57,7 @@ def add_relation_by_type(info_box, movie, relation):
         if entity == ' ':
             continue
         entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + entity.replace(" ", "_")) # TODO - use strip()?
-        g.add((movie, relation1, entity_graph))
+        # g.add((movie, relation_for_ontology, entity_graph))
 
 
 def get_directors_info(info_box):
@@ -67,9 +68,7 @@ def get_directors_info(info_box):
                                         "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/text()")
         entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Directed by')]/../td/a/@href |"
                                           "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/a/@href")
-        for url in entities_urls:
-            if url not in urls:
-                urls.add(url)
+        add_urls(entities_urls)
         return entities
 
 
@@ -81,9 +80,7 @@ def get_producers_info(info_box):
                                         "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/text()")
         entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Produced by')]/../td/a/@href |"
                                           "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/a/@href")
-        for url in entities_urls:
-            if url not in urls:
-                urls.add(url)
+        add_urls(entities_urls)
         return entities
 
 
@@ -95,9 +92,7 @@ def get_writers_info(info_box):
                                         "//table//th[contains(text(), 'Written by')]/../td/div/ul/li/text()")
         entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Written by')]/../td/a/@href |"
                                           "//table//th[contains(text(), 'Written by')]/../td/div/ul/li/a/@href")
-        for url in entities_urls:
-            if url not in urls:
-                urls.add(url)
+        add_urls(entities_urls)
         return entities
 
 
@@ -109,15 +104,74 @@ def get_actors_info(info_box):
                                         "//table//th[contains(text(),'Starring')]/../td/div/ul/li/text()")
         entities_urls = info_box[0].xpath("//table//th[contains(text(),'Starring')]/../td/a/@href |"
                                           "//table//th[contains(text(),'Starring')]/../td/div/ul/li/a/@href")
-        for url in entities_urls:
-            if url not in urls:
-                urls.add(url)
+        add_urls(entities_urls)
         return entities
 
 
-def add_person(info_box):
+def add_urls(entities_urls):
+    for url in entities_urls:
+        url_with_prefix = WIKI_PREFIX + url
+        if url_with_prefix not in urls:
+            urls.add(url_with_prefix)
+
+
+def add_person(info_box, name):
     if info_box == []:
         return
+    add_person_by_type(info_box, name, 'Born')
+    # add_person_by_type(info_box, name, 'Occupation')
+    # add_person_by_type(info_box, 'Years active')
+    # add_person_by_type(info_box, 'Education')
+    # add_person_by_type(info_box, 'Children')
+
+
+
+def add_person_by_type(info_box, name, relation):
+    name_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + name)
+    if relation == 'Born':
+        add_bday(info_box, name_graph)
+    # elif relation == 'Occupation':
+    #     add_occupation(info_box)
+
+
+
+
+
+def add_bday(info_box, name_graph):
+    bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td//span[contains(@class, 'bday')]/text() |"
+                             "//table//th[contains(text(),'Born')]/../td[contains(@class,'infobox-data')]/text()")
+    if len(bday) == 0:
+        print(name_graph)
+        return
+    if "/" in bday[0]:
+        bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + bday[0].split("/")[0])  # TODO - use strip()?
+    elif " " in bday[0]:
+        if "age" not in bday[0]:
+            bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + bday[0].split(" ")[-1])
+        else:
+            bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + bday[0].split(" ")[0].split(";")[-1])
+    else:
+        bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + "/" + bday[0].replace(".", "-"))
+
+    relation = rdflib.URIRef(EXAMPLE_PREFIX + "/" + 'Born_on')
+    g.add((name_graph, relation, bday_graph))
+
+
+#
+# Birthday = infobox[0].xpath( "//table//th[contains(text(), 'Born')]/../td/div/ul/li/span/span[contains(@class,'bday')]/text() |"
+#             "//table//th[contains(text(), 'Born')]/../td/div/ul/li/span/span[contains(@class,'bday')]/text()|"
+#             "//table//th[contains(text(), 'Born')]/../td[text() !=' ']/span/span[contains(@class,'bday')]/text()|"
+#             "//table//th[contains(text(), 'Born')]/../td/span/span[contains(@class,'bday')]/text()|"
+#             "//table//th[contains(text(), 'Born')]/../td/span/div/ul/li/span/span[contains(@class,'bday')]/text() |"
+#             "//table//th[contains(text(), 'Born')]/../td/span/span[contains(@class,'bday')]/text()|"
+#             "//table//th[contains(text(), 'Born')]/../td/div/div/ul/li/span/span[contains(@class,'bday')]/text()|"
+#                                      "//table//th[contains(text(), 'Born')]/../td/span/span/span[contains(@class,'bday')]/text()")
+
+# def add_occupation(info_box):
+#
+#
+#
+
 
 
 
