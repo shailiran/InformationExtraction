@@ -50,8 +50,6 @@ def add_relation_by_type(info_box, movie, relation):
         entities = get_directors_info(info_box)
     elif relation == 'Produced by':
         entities = get_producers_info(info_box)
-    elif relation == 'Written by':
-        entities = get_writers_info(info_box)
     else:
         entities = get_actors_info(info_box)
     for entity in entities:
@@ -64,10 +62,13 @@ def add_relation_by_type(info_box, movie, relation):
 
 def get_directors_info(info_box):
     if info_box != []:
-        entities = info_box[0].xpath("//table//th[contains(text(), 'Directed by')]/../td/a/text() |"
+        entities = info_box[0].xpath("//table//th[contains(text(), 'Directed by')]/../td/a/@href |"
                                         "//table//th[contains(text(), 'Directed by')]/../td/text() |"
-                                        "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/a/text() |"
+                                        "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/a/@href |"
                                         "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/text()")
+        for i, entity in enumerate(entities):
+            if "wiki" in entity:
+                entities[i] = entity[6:]
         entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Directed by')]/../td/a/@href |"
                                           "//table//th[contains(text(), 'Directed by')]/../td/div/ul/li/a/@href")
         add_urls(entities_urls)
@@ -76,34 +77,28 @@ def get_directors_info(info_box):
 
 def get_producers_info(info_box):
     if info_box != []:
-        entities = info_box[0].xpath("//table//th[contains(text(), 'Produced by')]/../td/a/text() |"
+        entities = info_box[0].xpath("//table//th[contains(text(), 'Produced by')]/../td/a/@href |"
                                         "//table//th[contains(text(), 'Produced by')]/../td/text() |"
-                                        "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/a/text() |"
+                                        "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/a/@href |"
                                         "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/text()")
+        for i, entity in enumerate(entities):
+            if "wiki" in entity:
+                entities[i] = entity[6:]
         entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Produced by')]/../td/a/@href |"
                                           "//table//th[contains(text(), 'Produced by')]/../td/div/ul/li/a/@href")
         add_urls(entities_urls)
         return entities
 
 
-def get_writers_info(info_box):
-    if info_box != []:
-        entities = info_box[0].xpath("//table//th[contains(text(), 'Written by')]/../td/a/text() |"
-                                        "//table//th[contains(text(), 'Written by')]/../td/text() |"
-                                        "//table//th[contains(text(), 'Written by')]/../td/div/ul/li/a/text() |"
-                                        "//table//th[contains(text(), 'Written by')]/../td/div/ul/li/text()")
-        entities_urls = info_box[0].xpath("//table//th[contains(text(), 'Written by')]/../td/a/@href |"
-                                          "//table//th[contains(text(), 'Written by')]/../td/div/ul/li/a/@href")
-        add_urls(entities_urls)
-        return entities
-
-
 def get_actors_info(info_box):
     if info_box != []:
-        entities = info_box[0].xpath("//table//th[contains(text(),'Starring' )]/../td/a/text() |"
+        entities = info_box[0].xpath("//table//th[contains(text(),'Starring' )]/../td/a/@href |"
                                         "//table//th[contains(text(),'Starring')]/../td/text() |"
-                                        "//table//th[contains(text(),'Starring')]/../td/div/ul/li/a/text() |"
+                                        "//table//th[contains(text(),'Starring')]/../td/div/ul/li/a/@href |"
                                         "//table//th[contains(text(),'Starring')]/../td/div/ul/li/text()")
+        for i, entity in enumerate(entities):
+            if "wiki" in entity:
+                entities[i] = entity[6:]
         entities_urls = info_box[0].xpath("//table//th[contains(text(),'Starring')]/../td/a/@href |"
                                           "//table//th[contains(text(),'Starring')]/../td/div/ul/li/a/@href")
         add_urls(entities_urls)
@@ -172,7 +167,7 @@ def add_bday(info_box, name_graph):
     bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td//span[contains(@class, 'bday')]/text() |"
                              "//table//th[contains(text(),'Born')]/../td[contains(@class,'infobox-data')]/text()")
     if len(bday) == 0:
-        print(name_graph)
+        # print(name_graph)
         return
     if "/" in bday[0]:
         bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].strip().split("/")[0])

@@ -91,7 +91,6 @@ def starred_in_question(question, g, internal):
         "" + movie + " <http://example.org/wiki/Starring> ?p."\
         "}"
     x = g.query(q)
-    print(list(x))
     if internal == 1:
         return list(x)
     print(print_ans(fix_answer(list(x))))
