@@ -37,7 +37,6 @@ def create_ontology(url):
 def create_relations(info_box, movie):
     add_relation_by_type(info_box, movie, 'Directed by')
     add_relation_by_type(info_box, movie, 'Produced by')
-    add_relation_by_type(info_box, movie, 'Written by')
     add_relation_by_type(info_box, movie, 'Starring')
     add_release_date(info_box, movie)
     add_based_on(info_box, movie)
@@ -56,7 +55,7 @@ def add_relation_by_type(info_box, movie, relation):
         # Undefeated movie
         if entity == ' ':
             continue
-        entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + entity.replace(" ", "_"))
+        entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + entity.strip().replace(" ", "_"))
         g.add((movie, relation_for_ontology, entity_graph))
 
 
@@ -107,19 +106,21 @@ def get_actors_info(info_box):
 def add_release_date(info_box, movie):
     if info_box == []:
         return
-    date = info_box[0].xpath("//table//th/div[contains(text(),'Release date')]/../../td//span[contains(@class, 'bday dtstart published updated')]/text()")
-    if len(date) == 0:
+    dates = info_box[0].xpath("//table//th/div[contains(text(),'Release date')]/../../td//span[contains(@class, 'bday dtstart published updated')]/text()")
+    if len(dates) == 0:
         return
-    date_graph = rdflib.URIRef(EXAMPLE_PREFIX + date[0])
-    relation = rdflib.URIRef(EXAMPLE_PREFIX + 'Released_on')
-    g.add((movie, relation, date_graph))
+    for date in dates:
+        date_graph = rdflib.URIRef(EXAMPLE_PREFIX + date)
+        relation = rdflib.URIRef(EXAMPLE_PREFIX + 'Released_on')
+        g.add((movie, relation, date_graph))
 
 
 def add_based_on(info_box, movie):
     if info_box == []:
         return
     book = info_box[0].xpath("//table//th[contains(text(),'Based on')]/../td//i/a/text() |"
-                             "//table//th[contains(text(),'Based on')]/../td//a/text()")
+                             "//table//th[contains(text(),'Based on')]/../td//a/text() |"
+                             "//table//th[contains(text(),'Based on')]/../td/div/i/text()")
     if len(book) == 0:
         return
     book_graph = rdflib.URIRef(EXAMPLE_PREFIX + book[0].replace(" ", "_"))

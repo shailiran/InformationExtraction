@@ -11,28 +11,28 @@ def ask_question(question, ontology):
     g = rdflib.Graph()
     g.parse(ontology, format="nt")
     if "directed" in question:
-        director_qestion(question, g)
+        res = director_qestion(question, g)
     elif "produced" in question:
-        producer_qestion(question, g)
+        res = producer_qestion(question, g)
     elif "book" in question:
-        based_on_book_qestion(question, g)
+        res = based_on_book_qestion(question, g)
     elif "long is" in question:
-        running_time_question(question, g)
+        res = running_time_question(question, g)
     elif "starred in" in question:
-        starred_in_question(question, g, 0)
+        res = starred_in_question(question, g, 0)
     elif "released?" in question:
-        released_question(question, g)
+        res = released_question(question, g)
     elif "star in" in question:
-        person_star_question(question, g)
+        res = person_star_question(question, g)
     elif "born?" in question:
-        born_question(question, g)
+        res = born_question(question, g)
     elif "occupation" in question:
-        occupation_question(question, g, 0)
+        res = occupation_question(question, g, 0)
     elif "starring" in question:
-        starring_question(question, g)
+        res = starring_question(question, g)
     elif "are also" in question:
-        occupations_question(question, g)
-    return
+        res = occupations_question(question, g)
+    return res
 
 
 def director_qestion(question, g):
@@ -42,7 +42,7 @@ def director_qestion(question, g):
         "}"
     x = g.query(q)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def producer_qestion(question, g):
@@ -52,7 +52,7 @@ def producer_qestion(question, g):
         "}"
     x = g.query(q)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def based_on_book_qestion(question, g):
@@ -64,15 +64,16 @@ def based_on_book_qestion(question, g):
         x = g.query(q)
         if len(list(x)) > 0:
             print("Yes")
-            return
+            return "Yes"
         print("No")
+        return "No"
     elif "books" in question:
         q = "select ?movie where{" \
             " ?movie <http://example.org/wiki/Based_on> ?p." \
             "}"
         x = g.query(q)
         print(len(list(x)))
-    return
+    return str(len(list(x)))
 
 
 def running_time_question(question, g):
@@ -82,7 +83,7 @@ def running_time_question(question, g):
         "}"
     x = g.query(q)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def starred_in_question(question, g, internal):
@@ -94,7 +95,7 @@ def starred_in_question(question, g, internal):
     if internal == 1:
         return list(x)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def released_question(question, g):
@@ -104,7 +105,7 @@ def released_question(question, g):
         "}"
     x = g.query(q)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def born_question(question, g):
@@ -114,26 +115,26 @@ def born_question(question, g):
         "}"
     x = g.query(q)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def person_star_question(question, g):
-    start_movie = question.find("in") + 3
+    start_movie = question.find(" in ") + 4
     movie = "<" + EXAMPLE_PREFIX + question[start_movie:-1].replace(" ", "_") + ">"
-    end_person = question.find("star") - 1
+    end_person = question.find(" star ")
     person = "<" + EXAMPLE_PREFIX + question[4:end_person].replace(" ", "_") + ">"
     stars_movie = starred_in_question("Who starred in " + question[start_movie:], g, 1)
     for star in stars_movie:
         star = URIRef_to_string(star)
         if star == person[1:-1]:
             print("Yes")
-            return
+            return "Yes"
     print("No")
-    return
+    return "No"
 
 
 def occupation_question(question, g, internal):
-    start_index = question.find("of") + 3
+    start_index = question.find(" of ") + 4
     person = "<" + EXAMPLE_PREFIX + question[start_index:-1].replace(" ", "_") + ">"
     q = "select ?o where{" \
         "" + person + " <http://example.org/wiki/Occupation> ?o." \
@@ -142,28 +143,26 @@ def occupation_question(question, g, internal):
     if internal == 1:
         return list(x)
     print(print_ans(fix_answer(list(x))))
-    return
+    return print_ans(fix_answer(list(x)))
 
 
 def starring_question(question, g):
-    end_person = question.find("won") - 1
+    end_person = question.find(" won ")
     person = "<" + EXAMPLE_PREFIX + question[24:end_person].replace(" ", "_") + ">"
 
     q = "select ?movies where{" \
         " ?movies <http://example.org/wiki/Starring>" + person + "." \
         "}"
     x = g.query(q)
-    # if internal == 1:
-    #     return len(list(x))
-    print(len(list(x)))
-    return
+    print(str(len(list(x))))
+    return str(len(list(x)))
 
 
 def occupations_question(question, g):
-    start_occupation1 = question.find("many") + len("many") + 1
-    end_occupation1 = question.find("are") - 1
+    start_occupation1 = question.find(" many ") + len(" many ")
+    end_occupation1 = question.find(" are ")
     occupation_1 = "<" + EXAMPLE_PREFIX + question[start_occupation1:end_occupation1].replace(" ", "_") + ">"
-    start_occupation2 = question.find("also") + len("also") + 1
+    start_occupation2 = question.find(" also ") + len(" also ")
     occupation_2 = "<" + EXAMPLE_PREFIX + question[start_occupation2:-1].replace(" ", "_") + ">"
 
     q1 = "select ?person where{" \
@@ -178,8 +177,8 @@ def occupations_question(question, g):
             tmp = "<" + URIRef_to_string(oc) + ">"
             if tmp == occupation_2:
                 cnt += 1
-    print(cnt)
-    return
+    print(str(cnt))
+    return cnt
 
 
 def URIRef_to_string(ans):
@@ -221,7 +220,7 @@ def test():
         ask_question(question, ontology)
         print("########################", '\n')
 
-
+#
 def main():
     args = sys.argv
     if args[1] == 'create':
@@ -232,5 +231,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+#
 # test()
