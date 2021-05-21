@@ -53,7 +53,7 @@ def add_relation_by_type(info_box, movie, relation):
         entities = get_actors_info(info_box)
     for entity in entities:
         # Undefeated movie
-        if entity == ' ':
+        if entity == ' ' or entity == ': ':
             continue
         entity_graph = rdflib.URIRef(EXAMPLE_PREFIX + entity.strip().replace(" ", "_"))
         g.add((movie, relation_for_ontology, entity_graph))
