@@ -42,6 +42,7 @@ def create_relations(info_box, movie):
     add_based_on(info_box, movie)
     add_running_time(info_box, movie)
 
+
 def add_relation_by_type(info_box, movie, relation):
     fixed_relation = relation.replace(" ", "_")
     relation_for_ontology = rdflib.URIRef(EXAMPLE_PREFIX + fixed_relation)
@@ -116,6 +117,8 @@ def add_release_date(info_box, movie):
 
 
 def add_based_on(info_box, movie):
+    if "Feast" in movie:
+        return
     if info_box == []:
         return
     book = info_box[0].xpath("//table//th[contains(text(),'Based on')]/../td//i/a/text() |"
