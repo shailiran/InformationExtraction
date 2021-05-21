@@ -4,7 +4,7 @@
 This is an information extraction system to answer natural language questions about Oscar-winning movies, using ontologies, Xpath, SPARQL, and HTML. <br/>
 The data is collected from: https://en.wikipedia.org/wiki/List_of_Academy_Award-winning_films.  <br/>
 
-## :question: Questions Format:
+## :question: Questions Format
 #### Questions About Specific Entities:
 1. Who directed `<film>`?
 2. Who produced `<film>`?
