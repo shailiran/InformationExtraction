@@ -21,7 +21,7 @@ The data is collected from: https://en.wikipedia.org/wiki/List_of_Academy_Award-
 2. How many films starring `<person>` won an academy award?
 3. How many `<occupation1>` are also `<occupation2>`?
   
-## :arrow_forward: Execution Instructions:
+## :arrow_forward: Execution Instructions
 To create the ontology run:<br />
 ```
   python film_qa.py create
