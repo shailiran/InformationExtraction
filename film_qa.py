@@ -14,7 +14,7 @@ def ask_question(question, ontology):
         res = director_qestion(question, g)
     elif "produced" in question:
         res = producer_qestion(question, g)
-    elif "book" in question:
+    elif " book" in question:
         res = based_on_book_qestion(question, g)
     elif "long is" in question:
         res = running_time_question(question, g)
@@ -73,7 +73,8 @@ def based_on_book_qestion(question, g):
             "}"
         x = g.query(q)
         print(len(list(x)))
-    return str(len(list(x)))
+        return str(len(list(x)))
+    return
 
 
 def running_time_question(question, g):

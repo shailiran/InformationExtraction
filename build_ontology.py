@@ -117,7 +117,7 @@ def add_release_date(info_box, movie):
 
 
 def add_based_on(info_box, movie):
-    if "Feast" in movie:
+    if "Feast" in movie or "Paperman" in movie:
         return
     if info_box == []:
         return
@@ -199,9 +199,13 @@ def add_bday(info_box, name_graph):
 
 def add_occupation(info_box, name_graph):
     occupations = info_box[0].xpath("//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/text() |"
-                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/a/text() |"
-                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/text()")
-
+                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/a/@href |"
+                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/text() |"
+                                    "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/a/@href |"
+                                    "//table//th[contains(text(),'Occupation')]/../td/text()")
+    for i, entity in enumerate(occupations):
+        if "wiki" in entity:
+            occupations[i] = entity[6:]
     relation = rdflib.URIRef(EXAMPLE_PREFIX + 'Occupation')
     if len(occupations) == 1:
         occupations = occupations[0].split(",")
