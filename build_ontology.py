@@ -158,8 +158,6 @@ def add_person(info_box, name):
 
 
 def add_person_by_type(info_box, name, relation):
-    if name == "Gary_Gilbert": # TODO - check!
-        return
     name_graph = rdflib.URIRef(EXAMPLE_PREFIX + name)
     if relation == 'Born':
         add_bday(info_box, name_graph)
@@ -168,8 +166,19 @@ def add_person_by_type(info_box, name, relation):
 
 
 def add_bday(info_box, name_graph):
-    bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td//span[contains(@class, 'bday')]/text() |"
-                             "//table//th[contains(text(),'Born')]/../td[contains(@class,'infobox-data')]/text()")
+    bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td//ul/li/span/span[contains(@class, 'bday')]/text()")
+    if len(bday) > 0:
+        for day in bday:
+            bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + day.replace(".", "-"))
+            relation = rdflib.URIRef(EXAMPLE_PREFIX + 'Born_on')
+            g.add((name_graph, relation, bday_graph))
+            return
+    if len(bday) == 0:
+        bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td//span[contains(@class, 'bday')]/text() |"
+                                 "//table//th[contains(text(),'Born')]/../td//span[contains(@class, 'dtstart bday')]/text()")
+    if len(bday) == 0:
+        bday = info_box[0].xpath("//table//th[contains(text(),'Born')]/../td[contains(@class,'infobox-data')]/text()")
+
     if len(bday) == 0:
         # print(name_graph)
         return
@@ -179,7 +188,10 @@ def add_bday(info_box, name_graph):
         if "age" not in bday[0]:
             bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].split(" ")[-1])
         else:
-            bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].split(" ")[0].split(";")[-1])
+            if ";" in bday:
+                bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].split(" ")[0].split(";")[-1])
+            else:
+                bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].split(" ")[0].split(u'\xa0')[-1])
     else:
         bday_graph = rdflib.URIRef(EXAMPLE_PREFIX + bday[0].replace(".", "-"))
 
@@ -187,23 +199,21 @@ def add_bday(info_box, name_graph):
     g.add((name_graph, relation, bday_graph))
 
 
-#
-# Birthday = infobox[0].xpath( "//table//th[contains(text(), 'Born')]/../td/div/ul/li/span/span[contains(@class,'bday')]/text() |"
-#             "//table//th[contains(text(), 'Born')]/../td/div/ul/li/span/span[contains(@class,'bday')]/text()|"
-#             "//table//th[contains(text(), 'Born')]/../td[text() !=' ']/span/span[contains(@class,'bday')]/text()|"
-#             "//table//th[contains(text(), 'Born')]/../td/span/span[contains(@class,'bday')]/text()|"
-#             "//table//th[contains(text(), 'Born')]/../td/span/div/ul/li/span/span[contains(@class,'bday')]/text() |"
-#             "//table//th[contains(text(), 'Born')]/../td/span/span[contains(@class,'bday')]/text()|"
-#             "//table//th[contains(text(), 'Born')]/../td/div/div/ul/li/span/span[contains(@class,'bday')]/text()|"
-#                                      "//table//th[contains(text(), 'Born')]/../td/span/span/span[contains(@class,'bday')]/text()")
-
 def add_occupation(info_box, name_graph):
-    occupations = info_box[0].xpath("//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/text() |"
-                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/a/@href |"
-                                   "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/text() |"
+    occupations = info_box[0].xpath("//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/a/@href |"
                                     "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/a/@href |"
-                                    "//table//th[contains(text(),'Occupation')]/../td/text()")
+                                    "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]//li/a/@href ")
+    if len(occupations) == 0:
+        occupations = info_box[0].xpath(
+            "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/text() |"
+            "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]/div//li/text() |"
+            "//table//th[contains(text(),'Occupation')]/../td[contains(@class, 'infobox-data role')]//li/a/text() |"
+            "//table//th[contains(text(),'Occupation')]/../td/text()")
     for i, entity in enumerate(occupations):
+        if len(entity.strip()) != 0 and "," == entity.strip()[0]:
+            occupations[i] = entity.strip()[1:]
+        if len(entity.strip()) != 0 and "," == entity.strip()[-1]:
+            occupations[i] = entity.strip()[:-1]
         if "wiki" in entity:
             occupations[i] = entity[6:]
     relation = rdflib.URIRef(EXAMPLE_PREFIX + 'Occupation')

@@ -15,7 +15,7 @@ def ask_question(question, ontology):
     elif "produced" in question:
         res = producer_qestion(question, g)
     elif " book" in question:
-        res = based_on_book_qestion(question, g)
+        res = based_on_book_qestion(question, g, 0)
     elif "long is" in question:
         res = running_time_question(question, g)
     elif "starred in" in question:
@@ -23,7 +23,7 @@ def ask_question(question, ontology):
     elif "released?" in question:
         res = released_question(question, g)
     elif "star in" in question:
-        res = person_star_question(question, g)
+        res = person_star_question(question, g, 0)
     elif "born?" in question:
         res = born_question(question, g)
     elif "occupation" in question:
@@ -55,8 +55,21 @@ def producer_qestion(question, g):
     return print_ans(fix_answer(list(x)))
 
 
-def based_on_book_qestion(question, g):
-    if "a book" in question:
+def based_on_book_qestion(question, g, external):
+    if "starring" in question:
+        # "How many films starring <person> are also based on books?"
+        q_1 = "How many films are based on books"
+        movies_based_on_books = based_on_book_qestion(q_1, g, 1)
+        start_person = question.find("starring") + len("starring") + 1
+        end_person = question.find("are") - len("are") + 2
+        person = question[start_person:end_person]
+        cnt = 0
+        for movie in movies_based_on_books:
+            q_2 = "Did " + person + " star in " + ans_format(movie) + "?"
+            if person_star_question(q_2, g, 1) == "Yes":
+                cnt += 1
+        print(cnt)
+    elif "a book" in question:
         movie = "<" + EXAMPLE_PREFIX + question[3:-17].replace(" ", "_") + ">"
         q = "select ?p where{" \
             "" + movie + " <http://example.org/wiki/Based_on> ?p."\
@@ -72,6 +85,8 @@ def based_on_book_qestion(question, g):
             " ?movie <http://example.org/wiki/Based_on> ?p." \
             "}"
         x = g.query(q)
+        if external == 1:
+            return list(x)
         print(len(list(x)))
         return str(len(list(x)))
     return
@@ -119,7 +134,7 @@ def born_question(question, g):
     return print_ans(fix_answer(list(x)))
 
 
-def person_star_question(question, g):
+def person_star_question(question, g, internal):
     start_movie = question.find(" in ") + 4
     movie = "<" + EXAMPLE_PREFIX + question[start_movie:-1].replace(" ", "_") + ">"
     end_person = question.find(" star ")
@@ -128,8 +143,12 @@ def person_star_question(question, g):
     for star in stars_movie:
         star = URIRef_to_string(star)
         if star == person[1:-1]:
+            if internal == 1:
+                return  "Yes"
             print("Yes")
             return "Yes"
+    if internal == 1:
+        return "No"
     print("No")
     return "No"
 
@@ -182,6 +201,7 @@ def occupations_question(question, g):
     return cnt
 
 
+
 def URIRef_to_string(ans):
     return str(ans).replace('(rdflib.term.URIRef(', '').replace('),)', '')[1:-1]
 
@@ -199,29 +219,8 @@ def fix_answer(list_ans):
 def print_ans(ans_lst):
     return ', '.join([str(elem) for elem in ans_lst])
 
-def test():
-    ontology = "ontology.nt"
-    # print(ask_question("Who directed Mank?", "ontology.nt"))
-    entities_questions = ["Who directed Bao (film)?", "Who produced 12 Years a Slave (film)?",
-                 "Is The Jungle Book (2016 film) based on a book?", "When was The Great Gatsby (2013 film) released?",
-                 "How long is Coco (2017 film)?", "Who starred in The Shape of Water?",
-                 "Did Octavia Spencer star in The Shape of Water?", "When was Chadwick Boseman born?",
-                 "What is the occupation of Emma Watson?", "How many films starring Meryl Streep won an academy award?",
-                 "Who produced Brave (2012 film)?", "Is Brave (2012 film) based on a book?"]
-    # for question in entities_questions:
-    #     print(question)
-    #     ask_question(question, ontology)
-    #     print("########################", '\n')
 
-    general_questions = ['How many films are based on books?',
-                         'How many films starring Leonardo DiCaprio won an academy award?',
-                         'How many film producer are also actor?']
-    for question in general_questions:
-        print(question)
-        ask_question(question, ontology)
-        print("########################", '\n')
 
-#
 def main():
     args = sys.argv
     if args[1] == 'create':
@@ -232,5 +231,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-#
-# test()
